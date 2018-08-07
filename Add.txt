@@ -1,0 +1,171 @@
+using System;
+using System.Collections.Generic;
+using System.Collections;
+using System.Text;
+
+namespace DynamicFormula
+{
+    class Add : FormulaObject
+    {
+        private FormulaObject operand1 = null;
+        private FormulaObject operand2 = null;
+
+        #region FormulaObject Members
+        public string parse(string s)
+        {
+            s = s.Trim();
+            if (s.StartsWith("+") != true)
+            {
+                throw new Exception("Illegal parse of add");
+            }
+
+            String remainingParse = s.Substring(1);
+            remainingParse = remainingParse.Trim();
+
+            #region parse operand 1
+            FormulaObject add = new Add();
+            FormulaObject subtract = new Subtract();
+            FormulaObject multiply = new Multiply();
+            FormulaObject divide = new Divide();
+            FormulaObject power = new Power();
+            FormulaObject variable = new Variable();
+            FormulaObject value = new Value();
+
+            if (add.nextIs(remainingParse))
+            {
+                remainingParse = add.parse(remainingParse);
+                operand1 = add;
+            }
+            else if (subtract.nextIs(remainingParse))
+            {
+                remainingParse = subtract.parse(remainingParse);
+                operand1 = subtract;
+            }
+            else if (multiply.nextIs(remainingParse))
+            {
+                remainingParse = multiply.parse(remainingParse);
+                operand1 = multiply;
+            }
+            else if (divide.nextIs(remainingParse))
+            {
+                remainingParse = divide.parse(remainingParse);
+                operand1 = divide;
+            }
+            else if (power.nextIs(remainingParse))
+            {
+                remainingParse = power.parse(remainingParse);
+                operand1 = power;
+            }
+            else if (variable.nextIs(remainingParse))
+            {
+                remainingParse = variable.parse(remainingParse);
+                operand1 = variable;
+            }
+            else if (value.nextIs(remainingParse))
+            {
+                remainingParse = value.parse(remainingParse);
+                operand1 = value;
+            }
+            else if (remainingParse.Equals(""))
+            {
+                throw new Exception("Unexpected end of formula");
+            }
+            else
+            {
+                throw new Exception("Unknown token during parse [" + remainingParse[0] + "]");
+            }
+            #endregion
+
+            remainingParse = remainingParse.Trim();
+
+            #region parse operand 2
+            add = new Add();
+            subtract = new Subtract();
+            multiply = new Multiply();
+            divide = new Divide();
+            power = new Power();
+            variable = new Variable();
+            value = new Value();
+
+            if (add.nextIs(remainingParse))
+            {
+                remainingParse = add.parse(remainingParse);
+                operand2 = add;
+            }
+            else if (subtract.nextIs(remainingParse))
+            {
+                remainingParse = subtract.parse(remainingParse);
+                operand2 = subtract;
+            }
+            else if (multiply.nextIs(remainingParse))
+            {
+                remainingParse = multiply.parse(remainingParse);
+                operand2 = multiply;
+            }
+            else if (divide.nextIs(remainingParse))
+            {
+                remainingParse = divide.parse(remainingParse);
+                operand2 = divide;
+            }
+            else if (power.nextIs(remainingParse))
+            {
+                remainingParse = power.parse(remainingParse);
+                operand2 = power;
+            }
+            else if (variable.nextIs(remainingParse))
+            {
+                remainingParse = variable.parse(remainingParse);
+                operand2 = variable;
+            }
+            else if (value.nextIs(remainingParse))
+            {
+                remainingParse = value.parse(remainingParse);
+                operand2 = value;
+            }
+            else if (remainingParse.Equals(""))
+            {
+                throw new Exception("Unexpected end of formula");
+            }
+            else
+            {
+                throw new Exception("Unknown token during parse [" + remainingParse[0] + "]");
+            }
+            #endregion
+
+            remainingParse = remainingParse.Trim();
+            return remainingParse;
+        }
+
+        public double evaluate(System.Collections.Hashtable variables)
+        {
+            if (operand1 == null || operand2 == null)
+            {
+                throw new Exception("NULL operand in Add");
+            }
+            else
+            {
+                return operand1.evaluate(variables) + operand2.evaluate(variables);
+            }
+        }
+
+        public bool nextIs(string s)
+        {
+            s = s.Trim();
+            return s.StartsWith("+");
+        }
+
+        public ArrayList getVariableNames()
+        {
+            ArrayList a = operand1.getVariableNames();
+            ArrayList b = operand2.getVariableNames();
+
+            for (int i = 0; i < b.Count; i++)
+            {
+                a.Add(b[i]);
+            }
+
+            return a;
+        }
+        #endregion
+    }
+}

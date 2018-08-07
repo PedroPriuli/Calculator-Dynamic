@@ -1,0 +1,78 @@
+using System;
+using System.Collections.Generic;
+using System.Collections;
+using System.Text;
+using System.Data;
+
+namespace DynamicFormula
+{
+    internal class Value : FormulaObject
+    {
+        private double value = 0;
+
+        #region FormulaObject Members
+        public String parse(String s)
+        {
+            s = s.Trim();
+
+            int index = 0;
+            String valueString = "";
+
+            bool hasPoint = false;
+
+            while (index < s.Length &&
+                    (s[index].Equals('0') ||
+                    s[index].Equals('1') ||
+                    s[index].Equals('2') ||
+                    s[index].Equals('3') ||
+                    s[index].Equals('4') ||
+                    s[index].Equals('5') ||
+                    s[index].Equals('6') ||
+                    s[index].Equals('7') ||
+                    s[index].Equals('8') ||
+                    s[index].Equals('9') ||
+                    s[index].Equals('.')))
+            {
+                valueString += s[index].ToString();
+
+                if (s[index].Equals('.'))
+                {
+                    if (hasPoint == false)
+                    {
+                        hasPoint = true;
+                    }
+                    else
+                    {
+                        throw new Exception("A Value can only have one .");
+                    }
+                }
+
+                index++;
+            }
+
+            value = double.Parse(valueString);
+            return s.Substring(index).Trim();
+        }
+
+        public double evaluate(Hashtable variables)
+        {
+            return value;
+        }
+
+        public bool nextIs(string s)
+        {
+            s = s.Trim();
+
+            return s.StartsWith("0") || s.StartsWith("1") || s.StartsWith("2") ||
+                s.StartsWith("3") || s.StartsWith("4") || s.StartsWith("5") ||
+                s.StartsWith("6") || s.StartsWith("7") || s.StartsWith("8") ||
+                s.StartsWith("9");
+        }
+
+        public ArrayList getVariableNames()
+        {
+            return new ArrayList();
+        }
+        #endregion
+    }
+}

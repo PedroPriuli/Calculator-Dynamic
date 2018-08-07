@@ -1,0 +1,16 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Collections;
+using System.Data;
+
+namespace DynamicFormula
+{
+    internal interface FormulaObject
+    {
+        String parse(String s); //parses (and sub parses the string); returns the remainder of the string to process
+        double evaluate(Hashtable variables); //returns the evaluation, using the appropiate constants and variables
+        bool nextIs(String s); //returns true if the next token is one of these
+        ArrayList getVariableNames(); //returns an arraylist of all the variables in the formula object
+    }
+}

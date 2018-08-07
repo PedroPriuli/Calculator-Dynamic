@@ -1,0 +1,117 @@
+using System;
+using System.Collections.Generic;
+using System.Collections;
+using System.Text;
+using System.Data;
+
+namespace DynamicFormula
+{
+    class Variable : FormulaObject
+    {
+        private String variableName = "";
+
+        #region FormulaObject Members
+        public String parse(String s)
+        {
+
+            s = s.Trim();
+
+            int index = 0;
+
+            while (index < s.Length && (
+                s[index].Equals('_') ||
+                s[index].Equals('a') ||
+                s[index].Equals('b') ||
+                s[index].Equals('c') ||
+                s[index].Equals('d') ||
+                s[index].Equals('e') ||
+                s[index].Equals('f') ||
+                s[index].Equals('g') ||
+                s[index].Equals('h') ||
+                s[index].Equals('i') ||
+                s[index].Equals('j') ||
+                s[index].Equals('k') ||
+                s[index].Equals('l') ||
+                s[index].Equals('m') ||
+                s[index].Equals('n') ||
+                s[index].Equals('o') ||
+                s[index].Equals('p') ||
+                s[index].Equals('q') ||
+                s[index].Equals('r') ||
+                s[index].Equals('s') ||
+                s[index].Equals('t') ||
+                s[index].Equals('u') ||
+                s[index].Equals('v') ||
+                s[index].Equals('w') ||
+                s[index].Equals('x') ||
+                s[index].Equals('y') ||
+                s[index].Equals('z')))
+            {
+                variableName += s[index].ToString();
+                index++;
+            }
+
+            return s.Substring(index).Trim();
+        }
+
+        public double evaluate(Hashtable variables)
+        {
+            if (variables.Contains(variableName))
+            {
+                return (double)variables[variableName];
+            }
+            else
+            {
+                throw new Exception("Undefined variable '" + variableName + "'");
+            }
+        }
+
+        public bool nextIs(string s)
+        {
+            s = s.Trim();
+
+            //check for explicit cases
+            if (s.StartsWith("a") ||
+                s.StartsWith("b") ||
+                s.StartsWith("c") ||
+                s.StartsWith("d") ||
+                s.StartsWith("e") ||
+                s.StartsWith("f") ||
+                s.StartsWith("g") ||
+                s.StartsWith("h") ||
+                s.StartsWith("i") ||
+                s.StartsWith("j") ||
+                s.StartsWith("k") ||
+                s.StartsWith("l") ||
+                s.StartsWith("m") ||
+                s.StartsWith("n") ||
+                s.StartsWith("o") ||
+                s.StartsWith("p") ||
+                s.StartsWith("q") ||
+                s.StartsWith("r") ||
+                s.StartsWith("s") ||
+                s.StartsWith("t") ||
+                s.StartsWith("u") ||
+                s.StartsWith("v") ||
+                s.StartsWith("w") ||
+                s.StartsWith("x") ||
+                s.StartsWith("y") ||
+                s.StartsWith("z"))
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public ArrayList getVariableNames()
+        {
+            ArrayList a = new ArrayList();
+            a.Add(variableName);
+            return a;
+        }
+        #endregion
+    }
+}

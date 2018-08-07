@@ -1,0 +1,350 @@
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Collections;
+
+namespace DynamicFormula
+{
+    public class Formula
+    {
+        private FormulaObject formula;
+
+        public Formula(String formulaString)
+        {
+            formula = null;
+
+            //Console.WriteLine("INPUT  : \"" + formulaString + "\"");
+            String prefixString = Formula.ToPrefix(formulaString);
+            //Console.WriteLine("OUTPUT : \"" + prefixString + "\"");
+
+            String remainingParse = prefixString;
+            remainingParse = remainingParse.Trim();
+
+            #region parse operand 1
+            FormulaObject add = new Add();
+            FormulaObject subtract = new Subtract();
+            FormulaObject multiply = new Multiply();
+            FormulaObject divide = new Divide();
+            FormulaObject power = new Power();
+            FormulaObject variable = new Variable();
+            FormulaObject value = new Value();
+
+            if (add.nextIs(remainingParse))
+            {
+                remainingParse = add.parse(remainingParse);
+                formula = add;
+            }
+            else if (subtract.nextIs(remainingParse))
+            {
+                remainingParse = subtract.parse(remainingParse);
+                formula = subtract;
+            }
+            else if (multiply.nextIs(remainingParse))
+            {
+                remainingParse = multiply.parse(remainingParse);
+                formula = multiply;
+            }
+            else if (divide.nextIs(remainingParse))
+            {
+                remainingParse = divide.parse(remainingParse);
+                formula = divide;
+            }
+            else if (power.nextIs(remainingParse))
+            {
+                remainingParse = power.parse(remainingParse);
+                formula = power;
+            }
+            else if (variable.nextIs(remainingParse))
+            {
+                remainingParse = variable.parse(remainingParse);
+                formula = variable;
+            }
+            else if (value.nextIs(remainingParse))
+            {
+                remainingParse = value.parse(remainingParse);
+                formula = value;
+            }
+            else if (remainingParse.Equals(""))
+            {
+                throw new Exception("Unexpected end of formula");
+            }
+            else
+            {
+                throw new Exception("Unknown token during parse [" + remainingParse[0] + "]");
+            }
+            #endregion
+
+            if (remainingParse.Trim().Equals("") != true)
+            {
+                throw new Exception("Unexpected remaining formula");
+            }
+        }
+
+        public double evaluate(Hashtable variables)
+        {
+            if (formula == null)
+            {
+                throw new Exception("Formula not parsed");
+            }
+            else
+            {
+                return formula.evaluate(variables);
+            }
+        }
+
+        public ArrayList getVarableNames()
+        {
+            ArrayList a = formula.getVariableNames();
+
+            Hashtable h = new Hashtable();
+            ArrayList output = new ArrayList();
+
+            for (int i = 0; i < a.Count; i++)
+            {
+                if (h.ContainsKey(a[i].ToString()) != true)
+                {
+                    h.Add(a[i].ToString(), a[i].ToString());
+                    output.Add(a[i].ToString());
+                }
+            }
+
+            return output;
+        }
+
+        #region infix -> prefix stuff
+        public static String ToPrefix(String input)
+        {
+            input = input.ToLower();
+
+            Stack s = new Stack();
+            String prefixString = "";
+            int index = input.Length - 1;
+
+            //()/*+-  
+            while (index >= 0)
+            {
+                #region operator
+                if (input[index] == '/' ||
+                    input[index] == '*' ||
+                    input[index] == '+' ||
+                    input[index] == '-' ||
+                    input[index] == '^')
+                {
+                    if (s.Count > 0)
+                    {
+                        int sTopValue = Formula.OperatorValue(s.Peek().ToString()[0]);
+                        int cValue = Formula.OperatorValue(input[index]);
+
+                        if (cValue < sTopValue)
+                        {
+                            while (s.Count > 0 && s.Peek().Equals(")") != true)
+                            {
+                                prefixString = s.Pop().ToString() + " " + prefixString;
+                            }
+
+                            s.Push(input[index].ToString());
+                        }
+                        else
+                        {
+                            s.Push(input[index].ToString());
+                        }
+                    }
+                    else
+                    {
+                        s.Push(input[index].ToString());
+                    }
+                }
+                #endregion
+                #region bracket
+                else if (input[index] == '(')
+                {
+                    try
+                    {
+                        while (s.Peek().ToString().Equals(")") != true)
+                        {
+                            prefixString = s.Pop().ToString() + " " + prefixString;
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        throw new Exception("Missing ) in formula");
+                    }
+                }
+                else if (input[index] == ')')
+                {
+                    s.Push(input[index].ToString());
+                }
+                #endregion
+                #region value
+                else if (input[index] == '0' ||
+                            input[index] == '1' ||
+                            input[index] == '2' ||
+                            input[index] == '3' ||
+                            input[index] == '4' ||
+                            input[index] == '5' ||
+                            input[index] == '6' ||
+                            input[index] == '7' ||
+                            input[index] == '8' ||
+                            input[index] == '9')
+                {
+                    String valueString = "";
+
+                    while (index >= 0 && (
+                            input[index] == '0' ||
+                            input[index] == '1' ||
+                            input[index] == '2' ||
+                            input[index] == '3' ||
+                            input[index] == '4' ||
+                            input[index] == '5' ||
+                            input[index] == '6' ||
+                            input[index] == '7' ||
+                            input[index] == '8' ||
+                            input[index] == '9' ||
+                            input[index] == '.'))
+                    {
+                        valueString = input[index].ToString() + valueString;
+                        index--;
+                    }
+                    index++;
+
+                    prefixString = valueString + " " + prefixString;
+                }
+                #endregion
+                #region variable
+                else if (input[index] == 'a' ||
+                       input[index] == 'b' ||
+                       input[index] == 'c' ||
+                       input[index] == 'd' ||
+                       input[index] == 'e' ||
+                       input[index] == 'f' ||
+                       input[index] == 'g' ||
+                       input[index] == 'h' ||
+                       input[index] == 'i' ||
+                       input[index] == 'j' ||
+                       input[index] == 'k' ||
+                       input[index] == 'l' ||
+                       input[index] == 'm' ||
+                       input[index] == 'n' ||
+                       input[index] == 'o' ||
+                       input[index] == 'p' ||
+                       input[index] == 'q' ||
+                       input[index] == 'r' ||
+                       input[index] == 's' ||
+                       input[index] == 't' ||
+                       input[index] == 'u' ||
+                       input[index] == 'v' ||
+                       input[index] == 'w' ||
+                       input[index] == 'x' ||
+                       input[index] == 'y' ||
+                       input[index] == 'z'
+               )
+                {
+                    String valueString = "";
+
+                    while (index >= 0 && (
+                            input[index] == '_' ||
+                            input[index] == 'a' ||
+                            input[index] == 'b' ||
+                            input[index] == 'c' ||
+                            input[index] == 'd' ||
+                            input[index] == 'e' ||
+                            input[index] == 'f' ||
+                            input[index] == 'g' ||
+                            input[index] == 'h' ||
+                            input[index] == 'i' ||
+                            input[index] == 'j' ||
+                            input[index] == 'k' ||
+                            input[index] == 'l' ||
+                            input[index] == 'm' ||
+                            input[index] == 'n' ||
+                            input[index] == 'o' ||
+                            input[index] == 'p' ||
+                            input[index] == 'q' ||
+                            input[index] == 'r' ||
+                            input[index] == 's' ||
+                            input[index] == 't' ||
+                            input[index] == 'u' ||
+                            input[index] == 'v' ||
+                            input[index] == 'w' ||
+                            input[index] == 'x' ||
+                            input[index] == 'y' ||
+                            input[index] == 'z'))
+                    {
+                        valueString = input[index].ToString() + valueString;
+                        index--;
+                    }
+                    index++;
+
+                    prefixString = valueString + " " + prefixString;
+                }
+                #endregion
+                #region remove " "
+                else if (input[index] == ' ')
+                {
+                }
+                #endregion
+                #region unknown
+                else
+                {
+                    throw new Exception("UNKNOWN token");
+                }
+                #endregion
+
+                index--;
+            }
+
+            #region finish stack
+            while (s.Count > 0)
+            {
+                if (s.Peek().Equals(")") != true)
+                {
+                    prefixString = s.Pop().ToString() + " " + prefixString;
+                }
+                else
+                {
+                    s.Pop(); //discard )
+                }
+            }
+            #endregion
+
+            return prefixString;
+        }
+
+        public static int OperatorValue(char value)
+        {
+            if (value == '-')
+            {
+                return 0;
+            }
+            else if (value == '+')
+            {
+                return 1;
+            }
+            else if (value == '*')
+            {
+                return 2;
+            }
+            else if (value == '/')
+            {
+                return 3;
+            }
+            else if (value == '^')
+            {
+                return 4;
+            }
+            else if (value == ')')
+            {
+                return 5;
+            }
+            else if (value == '(')
+            {
+                return 6;
+            }
+            else
+            {
+                throw new Exception("Unknown Operator");
+            }
+        }
+        #endregion
+    }
+}
